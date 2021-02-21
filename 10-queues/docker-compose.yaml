@@ -1,0 +1,52 @@
+version: '3.5'
+
+services:
+  beanstalkd:
+    build: beanstalkd
+    restart: unless-stopped
+    volumes:
+      - ./beanstalkd/binlog:/project/binlog
+    ports:
+      - 11300:11300
+
+  producer:
+    build: flask
+    restart: unless-stopped
+    environment:
+      FLASK_APP: producer.py
+    ports:
+      - 5000:5000
+    volumes:
+      - ./flask:/project
+    command: ["flask", "run"]
+
+  receiver:
+    build: flask
+    restart: unless-stopped
+    environment:
+      FLASK_APP: receiver.py
+      PYTHONUNBUFFERED: 0
+    volumes:
+      - ./flask:/project
+    command: ["python", "receiver.py"]
+
+  beanstalk_console:
+    image: agaveapi/beanstalkd-console
+    depends_on:
+      - beanstalkd
+    environment:
+      BEANSTALKD_HOST: beanstalkd
+      BEANSTALKD_PORT: 11300
+    ports:
+      - 80:80
+
+  redis:
+    build: redis
+    restart: unless-stopped
+    volumes:
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./redis/data:/data/
+
+  siege:
+    image: yokogawa/siege
+    restart: unless-stopped

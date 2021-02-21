@@ -1,0 +1,4 @@
+flask==1.1.2
+beanstalkc
+redis==3.5.3
+python-dateutil==2.4.1
